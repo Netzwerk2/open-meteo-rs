@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Duration;
 
 const DEFAULT_FORECAST_ENDPOINT: &str = "https://api.open-meteo.com/v1/";
@@ -6,7 +7,9 @@ const DEFAULT_GEOCODING_ENDPOINT: &str = "https://geocoding-api.open-meteo.com/v
 const DEFAULT_AIR_QUALITY_ENDPOINT: &str = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 const DEFAULT_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_TIMEOUT: Duration = Duration::from_millis(5000);
+#[cfg(not(target_arch = "wasm32"))]
 const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_millis(2000);
 
 #[derive(Debug)]
@@ -27,9 +30,15 @@ impl Default for Client {
             archive_endpoint: DEFAULT_ARCHIVE_ENDPOINT.to_string(),
             geocoding_endpoint: DEFAULT_GEOCODING_ENDPOINT.to_string(),
             air_quality_endpoint: DEFAULT_AIR_QUALITY_ENDPOINT.to_string(),
+            #[cfg(not(target_arch = "wasm32"))]
             http_client: reqwest::Client::builder()
                 .timeout(DEFAULT_TIMEOUT)
                 .connect_timeout(DEFAULT_CONNECT_TIMEOUT)
+                .user_agent(DEFAULT_USER_AGENT)
+                .build()
+                .unwrap(),
+            #[cfg(target_arch = "wasm32")]
+            http_client: reqwest::Client::builder()
                 .user_agent(DEFAULT_USER_AGENT)
                 .build()
                 .unwrap(),
